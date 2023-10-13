@@ -28,7 +28,6 @@ add_library(${PROJECT_NAME})
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(${CMAKE_CURRENT_LIST_DIR}/lib/atomic-tests/cmake/atomic-tests.cmake)
-    add_subdirectory(lib)
 endif()
 
 add_subdirectory(source)
