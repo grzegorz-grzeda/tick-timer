@@ -1,0 +1,6 @@
+{
+    "name": "tick-timer",
+    "libraries": [
+        "atomic-tests"
+    ]
+}
