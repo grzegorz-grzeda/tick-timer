@@ -21,3 +21,109 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#include "tick-timer.h"
+#include <stdlib.h>
+
+typedef struct tick_timer_instance {
+    tick_timer_instance_handler_t handler;
+    void* handler_context;
+    bool is_active;
+    uint32_t current_value_ms;
+    uint32_t period_ms;
+    uint32_t delay_ms;
+} tick_timer_instance_t;
+
+typedef struct tick_timer {
+    tick_timer_instance_t* instances;
+    size_t instances_capacity;
+    size_t instances_count;
+} tick_timer_t;
+
+static void process_instance(tick_timer_instance_t* instance) {
+    if (!instance->is_active) {
+        return;
+    }
+    if (instance->current_value_ms > 0) {
+        instance->current_value_ms--;
+        return;
+    }
+    if (instance->handler) {
+        instance->handler(instance, instance->handler_context);
+    }
+    if (!instance->period_ms) {
+        instance->is_active = false;
+    } else {
+        instance->current_value_ms = (instance->period_ms - 1);
+    }
+}
+
+tick_timer_t* tick_timer_create(size_t max_number_of_instances) {
+    tick_timer_t* timer = calloc(1, sizeof(tick_timer_t));
+    if (!timer) {
+        return NULL;
+    }
+    timer->instances =
+        calloc(max_number_of_instances, sizeof(tick_timer_instance_t));
+    if (!timer->instances) {
+        free(timer);
+        return NULL;
+    }
+    timer->instances_capacity = max_number_of_instances;
+    return timer;
+}
+
+void tick_timer_destroy(tick_timer_t* timer) {
+    if (!timer) {
+        return;
+    }
+    free(timer->instances);
+    free(timer);
+}
+
+void tick_timer_tick_1ms(tick_timer_t* timer) {
+    if (!timer) {
+        return;
+    }
+    for (size_t i = 0; i < timer->instances_count; i++) {
+        process_instance(timer->instances + i);
+    }
+}
+
+bool tick_timer_register_instance(tick_timer_t* timer,
+                                  uint32_t period_ms,
+                                  uint32_t delay_ms,
+                                  tick_timer_instance_handler_t handler,
+                                  void* context) {
+    if (!timer || !handler) {
+        return false;
+    }
+    if ((timer->instances_count >= timer->instances_capacity) ||
+        ((period_ms == 0) && (delay_ms == 0))) {
+        return false;
+    }
+    timer->instances_count++;
+    tick_timer_instance_t* instance = timer->instances + timer->instances_count;
+    instance->is_active = false;
+    instance->period_ms = period_ms;
+    instance->delay_ms = delay_ms;
+    instance->handler = handler;
+    instance->handler_context = context;
+    return true;
+}
+
+bool tick_timer_start_instance(tick_timer_instance_t* instance) {
+    if (!instance || instance->is_active) {
+        return false;
+    }
+    instance->current_value_ms = instance->delay_ms;
+    instance->is_active = true;
+    return true;
+}
+
+bool tick_timer_stop_instance(tick_timer_instance_t* instance) {
+    if (!instance) {
+        return false;
+    }
+    instance->is_active = false;
+    return true;
+}
