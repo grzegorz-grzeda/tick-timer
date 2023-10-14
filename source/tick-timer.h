@@ -62,11 +62,11 @@ tick_timer_t* tick_timer_create(size_t max_number_of_instances);
 
 void tick_timer_destroy(tick_timer_t* timer);
 
-void tick_timer_tick_1ms(tick_timer_t* timer);
+void tick_timer_tick(tick_timer_t* timer);
 
 bool tick_timer_register_instance(tick_timer_t* timer,
-                                  uint32_t period_ms,
-                                  uint32_t delay_ms,
+                                  uint32_t period_ticks,
+                                  uint32_t delay_ticks,
                                   tick_timer_instance_handler_t handler,
                                   void* context);
 
