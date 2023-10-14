@@ -21,3 +21,5 @@
 # SOFTWARE.
 #
 atomic_tests_add(test-tick-timer test-tick-timer.c tick-timer)
+atomic_tests_mock(test-tick-timer calloc)
+atomic_tests_mock(test-tick-timer free)
